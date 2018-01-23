@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+	<style>
+	  body {background-color: powderblue;}
+	  h1 {color: red;}
+	  p {color: blue;}
+	</style>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+	<head>
+		<title>Test Interface</title>
+	</head>
+
+	<body>
+	
+		<button id="button1" type="reset" style="height:200px;width:200px">Send "SPIKE"</button>
+		<button id="button2" type="reset" style="height:200px;width:200px">Send "DANE"</button>
+		
+		<p>Latest text from server:</p>
+		<p id="latestText">No text yet received</p>
+	</body>
+
+	<script>
+		var keyString = "";
+		var ws_connection;
+		var reconnectInterval = 3 * 1000;
+		var timeOut = undefined;
+
+		document.onkeydown = function(evt) {
+			evt = evt || window.event;
+			if(evt.keyCode == 13){
+				ws_connection.send(keyString); // Send the message 'Ping' to the server
+				keyString = "";
+			}
+			else{
+				keyString = keyString + String.fromCharCode(evt.keyCode);
+			}
+		};
+		
+		document.getElementById("button1").onmousedown = function() {
+			ws_connection.send('SPIKE Clicked');
+		}
+		
+		document.getElementById("button2").onmousedown = function() {
+			ws_connection.send('DANE Clicked');
+		}
+		
+		var connectWebsocket = function(){
+			ws_connection = new WebSocket('ws://192.168.1.90:5300/');
+			ws_connection.onopen = function () {
+				alert("CONNECTED");
+				ws_connection.send("New Socket Connection"); // Send the message to the server
+			};
+			
+			ws_connection.onclose = function () {
+				timeOut = setTimeout(connectWebsocket, reconnectInterval);
+			};
+			
+			ws_connection.onerror = function (error) {
+				timeOut = setTimeout(connectWebsocket, reconnectInterval);
+			};
+			
+			// Log messages from the server
+			ws_connection.onmessage = function (e) {
+				document.getElementById("latestText").innerHTML = e.data;
+			};
+		}
+		
+		connectWebsocket();
+	</script>
+
+</html>
